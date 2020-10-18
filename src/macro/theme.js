@@ -1,11 +1,7 @@
 import dlv from 'dlv'
 import { replaceWithLocation, astify } from './../macroHelpers'
 import { getTheme, assert } from './../utils'
-import {
-  logGeneralError,
-  themeErrorNotString,
-  themeErrorNotFound,
-} from './../logging'
+import { logGeneralError, themeErrorNotFound } from './../logging'
 
 const getFunctionValue = path => {
   if (path.parent.type !== 'CallExpression') return
@@ -14,7 +10,8 @@ const getFunctionValue = path => {
   if (!parent) return
 
   const argument = parent.get('arguments')[0] || ''
-  return { parent, input: argument.evaluate().value }
+
+  return { parent, input: argument && argument.evaluate().value }
 }
 
 const getTaggedTemplateValue = path => {
@@ -26,13 +23,6 @@ const getTaggedTemplateValue = path => {
 
   return { parent, input: parent.get('quasi').evaluate().value }
 }
-
-const normalizeThemeValue = foundValue =>
-  Array.isArray(foundValue)
-    ? foundValue.join(', ')
-    : typeof foundValue === 'string'
-    ? foundValue.trim()
-    : foundValue
 
 const trimInput = themeValue => {
   const arrayValues = themeValue.split('.').filter(Boolean)
@@ -50,19 +40,15 @@ const handleThemeFunction = ({ references, t, state }) => {
 
   references.theme.forEach(path => {
     const { input, parent } =
-      getTaggedTemplateValue(path) || getFunctionValue(path)
+      getTaggedTemplateValue(path) || getFunctionValue(path) || ''
 
-    if (input === '') {
-      return replaceWithLocation(parent, astify('', t))
-    }
-
-    assert(!parent || !input, () =>
+    assert(!parent, () =>
       logGeneralError(
         "The theme value doesn’t look right\n\nTry using it like this: theme`colors.black` or theme('colors.black')"
       )
     )
 
-    const themeValue = dlv(theme(), input)
+    const themeValue = theme(input)
     assert(!themeValue, () =>
       themeErrorNotFound({
         theme: input.includes('.') ? dlv(theme(), trimInput(input)) : theme(),
@@ -71,12 +57,7 @@ const handleThemeFunction = ({ references, t, state }) => {
       })
     )
 
-    const normalizedValue = normalizeThemeValue(themeValue)
-    assert(typeof normalizedValue !== 'string', () =>
-      themeErrorNotString({ themeValue, input })
-    )
-
-    return replaceWithLocation(parent, astify(normalizedValue, t))
+    return replaceWithLocation(parent, astify(themeValue, t))
   })
 }
 
