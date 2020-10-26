@@ -9,7 +9,7 @@ const getConfigProperties = (state, config) => {
   const configFile = config && config.config
 
   const configPath = resolve(sourceRoot, configFile || `./tailwind.config.js`)
-  const configExists = existsSync(configPath)
+  const configExists = existsSync && existsSync(configPath)
   const tailwindConfig = configExists
     ? resolveTailwindConfig([require(configPath), defaultTailwindConfig])
     : resolveTailwindConfig([defaultTailwindConfig])

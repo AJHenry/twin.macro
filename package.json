@@ -6,8 +6,9 @@
   "types": "types/index.d.ts",
   "scripts": {
     "dev": "nodemon --watch src -x \"npm run build:macro\" --delay .2",
-    "build": "npm run build:macro",
+    "build": "npm run build:macro && npm run build:runtime",
     "build:macro": "microbundle -i src/macro.js -f cjs -o ./macro.js --target node",
+    "build:runtime": "microbundle -i src/runtime.js -f cjs -o ./runtime/index.js --target node",
     "test:types": "tsc -b ./types/tsconfig.json",
     "test": "npm run build && jest && npm run test:types",
     "prepublishOnly": "npm run build"

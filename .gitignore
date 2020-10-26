@@ -5,6 +5,7 @@ node_modules
 /utils.umd.js.map
 .vscode
 yarn.lock
+/runtime
 
 # artifacts from type tests
 *.tsbuildinfo
